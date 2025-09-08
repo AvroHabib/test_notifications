@@ -10,3 +10,4 @@ psycopg2-binary==2.9.9
 redis==5.2.0
 celery==5.4.0
 django-celery-beat==2.7.0
+eventlet==0.35.2
