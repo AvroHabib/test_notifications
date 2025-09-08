@@ -13,6 +13,18 @@ from .serializers import (
 )
 
 
+@extend_schema(
+    request=CustomTokenObtainPairSerializer,
+    responses={200: {
+        "type": "object",
+        "properties": {
+            "access": {"type": "string"},
+            "refresh": {"type": "string"}
+        }
+    }},
+    summary="User Login",
+    description="Login with phone number and password to get JWT tokens"
+)
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 

@@ -73,11 +73,40 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = 'phone_number'
+    phone_number = serializers.CharField()
+    password = serializers.CharField(write_only=True)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['phone_number'] = self.fields.pop('username')
+        # Remove the username field since we're using phone_number
+        if 'username' in self.fields:
+            del self.fields['username']
+    
+    def validate(self, attrs):
+        # Use phone_number as username for authentication
+        phone_number = attrs.get('phone_number')
+        password = attrs.get('password')
+        
+        if not phone_number or not password:
+            raise serializers.ValidationError('Must include phone number and password.')
+        
+        # Authenticate using phone_number as username
+        from django.contrib.auth import authenticate
+        user = authenticate(username=phone_number, password=password)
+        
+        if user is None:
+            raise serializers.ValidationError('Invalid phone number or password.')
+        
+        if not user.is_active:
+            raise serializers.ValidationError('User account is disabled.')
+        
+        # Get tokens
+        refresh = self.get_token(user)
+        
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
     
     @classmethod
     def get_token(cls, user):
